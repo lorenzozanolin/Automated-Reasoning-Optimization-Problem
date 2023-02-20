@@ -30,3 +30,5 @@ m, n,
 k cartons of size s_k and bottom coordinates for each of them.
 
 Output must contains positions of all cartons within the room.
+
+each movement is single, i.e. every change of 1 position is a step
