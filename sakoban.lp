@@ -60,6 +60,3 @@ reachable(T,SPos,FPos,l):- tile(SPos), tile(FPos),tile(SPos+1), FPos = SPos - 1,
 %#show move/5.
 %#show do/1. %non mostro solo push
 #show on/3.
-
-%calcola area, ovvero setto come bloccate le celle coperte dal blocco
-on(T,Id,(Pos-n)),...,on(T,Id,(Pos-(n*k))):-on(T,Id,Pos),box(Id,k)
