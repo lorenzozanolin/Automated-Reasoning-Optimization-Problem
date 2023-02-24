@@ -1,4 +1,4 @@
-RICHIESTA STANDARD PROGETTO
+REQUEST
 
 Write a Minizinc and an ASP program capable of finding a solution to the 
 following  problem.
@@ -26,9 +26,10 @@ Prepare the programs and the benchmark instances used in a unique zip file.
 ==========================================================
 Use separate files (instances) and pass them to the general model. 
 Instances containes the input, i.e. 
-m, n,
+m (rows), n (columns), maxTime (steps upperboud), maxNumber (boxes size upperboud)
 k cartons of size s_k and bottom coordinates for each of them.
+goals (coordinates) for each box.
 
 Output must contains positions of all cartons within the room.
 
-each movement is single, i.e. every change of 1 position is a step
+Each movement is single, i.e. every change of 1 position is a step.
