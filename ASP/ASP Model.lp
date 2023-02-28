@@ -3,9 +3,9 @@
 % All constants are given also the input
 %----------------------------------------------------------------------------------------------------------------
 
-rows(1..m).
-columns(1..n).
-number(1..maxNumber).  %number of boxes
+rows(1..n).
+columns(1..m).
+number(1..boxNumber).  %number of boxes
 dimension(1..maxDim).   %dimension of each box, maximum is maxDim  
 time(0..maxTime).   %number of steps, maximum is maxTime
 direction(u;d;l;r). 
@@ -67,7 +67,7 @@ goal(T,Id) :- vertexPosition(T,Id,X,Y),deposit(Id,X,Y),time(T).
 % used to visualize final vertexes position hiding the timestamp
 finalVertex(Id,X,Y):-vertexPosition(maxTime,Id,X,Y).
 
-% minimize number of moves.
+%minimize number of moves.
 requiredMoves(M) :- M = #count{T:move(T,Id,D)}.
 #minimize {M:requiredMoves(M)}.
 
