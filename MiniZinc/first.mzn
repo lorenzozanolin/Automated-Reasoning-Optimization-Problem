@@ -19,17 +19,18 @@ maxTime = 2;
 maxDim = 2;
 initialCoords = array2d(1..k,1..3,
                         [|3,3,2  %  first is x (column), second is y (row), third is dimension
-                         |1,1,1
-                         |2,2,1|]);     
+                         |2,3,1
+                         |5,2,1|]);     
 movesDoneAtTime = [0];
 boxSelectedAtTime = [1];
+%boxMovedAtTime = [0];
                         
 array [CARTONS,1..3] of par int: initialCoords;   % initialCoords[i][1] and coord[i][2] are the initial coordinates of carton i, initialCoords[i][3] is the length of the i-th box.
 array [CARTONS,1..2,1..maxTime] of var int: vertexCoords;  %save vertex coordinates at each step (to generate successive coordinates)
 
 array[STEPS] of var MOVES: movesDoneAtTime; %array containing the moves done at time i... this is calculated by solver
 array[STEPS] of var CARTONS: boxSelectedAtTime; %array containing the box selected at time i... this is calculated by solver
-array[STEPS] of var 0..k: boxMovedAtTime; %array containing the box moved at time i... this is calculated by solver
+%array[STEPS] of var 0..k: boxMovedAtTime; %array containing the box moved at time i... this is calculated by solver
 %array [CARTONS,1..2] of par int: finalCoords;   % finalCoords[i][1] and coord[i][2] are the final coordinates of carton i.
 array [ROWS,COLUMNS,1..maxTime] of var 0..3: room;  % room[i][j] = 0 if the cell is full, id means a box of id=id is on that cell.
 
@@ -59,9 +60,9 @@ predicate setInitialMatrix()=
   ) 
 ;
 
-predicate pushable(var CARTONS:id , STEPS:t, MOVES:d) =  %pushable se è libero davanti e dietro la scatola, verso quella direzione
+predicate pushable(var CARTONS:id , STEPS:t, var MOVES:d) =  %pushable se è libero davanti e dietro la scatola, verso quella direzione
 
-    d == 0 -> (  %DOWN
+    (d == 0 -> (  %DOWN
       exists(i in 0..initialCoords[id,3]-1)(  %check behind the box, where the sokoban is
         room[vertexCoords[id,2, t]-initialCoords[id,3], vertexCoords[id,1,t]+i,t] == 0
       )
@@ -70,17 +71,67 @@ predicate pushable(var CARTONS:id , STEPS:t, MOVES:d) =  %pushable se è libero 
       not exists(i in 0..initialCoords[id,3]-1)(  %check over the box, all cells must be empty
         room[vertexCoords[id,2, t]+1, vertexCoords[id,1,t]+i,t] != 0
       )
+    ))
+    
+    /\
+    
+   (d == 1 -> ( %UP
+      exists(i in 0..initialCoords[id,3]-1)(  %check behind the box, where the sokoban is
+        room[vertexCoords[id,2, t]+1, vertexCoords[id,1,t]+i,t] == 0
+      )
+      /\
+      
+      not exists(i in 0..initialCoords[id,3]-1)(  %check over the box, all cells must be empty
+        room[vertexCoords[id,2, t]-initialCoords[id,3], vertexCoords[id,1,t]+i,t] != 0
+      )
     )
+   )
+   
+   /\
+    
+   (d == 2 -> ( %LEFT
+      exists(i in 0..initialCoords[id,3]-1)(  %check behind the box, where the sokoban is
+        room[vertexCoords[id,2, t]-i, vertexCoords[id,1,t]+initialCoords[id,3],t] == 0
+      )
+      /\
+      
+      not exists(i in 0..initialCoords[id,3]-1)(  %check over the box, all cells must be empty
+        room[vertexCoords[id,2, t]-i, vertexCoords[id,1,t]-1,t] != 0
+      )
+    )
+   )
+   
+   /\
+    
+   (d == 3 -> ( %RIGHT
+      exists(i in 0..initialCoords[id,3]-1)(  %check behind the box, where the sokoban is
+        room[vertexCoords[id,2, t]-i, vertexCoords[id,1,t]-1,t] == 0
+      )
+      /\
+      
+      not exists(i in 0..initialCoords[id,3]-1)(  %check over the box, all cells must be empty
+        room[vertexCoords[id,2, t]-i, vertexCoords[id,1,t]+initialCoords[id,3],t] != 0
+      )
+    )
+   )
 ;
 
 predicate inertia() = 
 %inertia, all boxes not moved at time i must have same coords at time i+1
   (forall(t in STEPS) (
     forall(carton in CARTONS)(
-      (carton != boxMovedAtTime[t] ->  %if a box was not moved
+      (carton != boxSelectedAtTime[t] ->  %if a box was not moved
       (vertexCoords[carton,1,t+1] = vertexCoords[carton,1,t] /\  %x untouched
        vertexCoords[carton,2,t+1] = vertexCoords[carton,2,t])) %y untouched
-  )))
+      )
+          
+     /\
+     %if the box selected is not pushable toward the direction selected, then inertia
+     ((not pushable(boxSelectedAtTime[t],t,movesDoneAtTime[t])) -> 
+       (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] /\  %x untouched
+        vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t]))
+         
+  ))
 ;
 
 predicate move() = 
@@ -89,36 +140,32 @@ predicate move() =
     %for each move in movesDoneAtTime we move the box
     ((movesDoneAtTime[t] = 0 /\ pushable(boxSelectedAtTime[t],t,0))->  %down
     (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] /\  %x untouched
-     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t] +1) /\
-     boxMovedAtTime[t] = boxSelectedAtTime[t]) %y 
+     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t] +1)) %y 
     
     /\
     
-    (movesDoneAtTime[t] = 1 ->  %up
+    ((movesDoneAtTime[t] = 1 /\ pushable(boxSelectedAtTime[t],t,1)) -> %up
     (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] /\  %x 
-     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t] -1)/\
-     boxMovedAtTime[t] = boxSelectedAtTime[t]) %y 
-    
-   /\
-    
-    (movesDoneAtTime[t] = 2 ->  %left
-    (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] - 1 /\  %x 
-     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t])/\
-     boxMovedAtTime[t] = boxSelectedAtTime[t]) %y 
+     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t] -1)) %y  
     
     /\
     
-    (movesDoneAtTime[t] = 3 ->  %right
+    ((movesDoneAtTime[t] = 2 /\ pushable(boxSelectedAtTime[t],t,2))->  %left
+    (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] - 1 /\  %x-1 
+     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t])) %y 
+    
+    /\
+    
+    (movesDoneAtTime[t] = 3 /\ pushable(boxSelectedAtTime[t],t,3) ->  %right
     (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] + 1 /\  %x 
-     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t])/\
-     boxMovedAtTime[t] = boxSelectedAtTime[t]) %y 
+     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t])) %y 
     
   ))
 ;
 
 predicate printMatrix() = 
 
-  forall(t in 2..maxTime)(
+  forall(t in 1..maxTime)(
     forall(row in ROWS, col in COLUMNS )(  %set empty cells
       if (not exists(c in CARTONS)(
             (row >= vertexCoords[c,2,t] - initialCoords[c,3] + 1 /\ row <= vertexCoords[c,2,t] ) /\ (col >= vertexCoords[c,1,t] /\ col <= vertexCoords[c,1,t] + initialCoords[c,3] - 1)
@@ -160,7 +207,8 @@ output [ "matrice : \n"] ++
           endif
         endif |
         
-        t in 1..maxTime, i in ROWS, j in COLUMNS
+        t in 1..maxTime,
+        i in ROWS, j in COLUMNS
     ] ++ [ "coordinate all'istante : \n"] ++ 
     
     [  show(vertexCoords[i,j,t]) ++ 
@@ -171,10 +219,10 @@ output [ "matrice : \n"] ++
           endif
         endif |
         t in 1..maxTime, i in CARTONS, j in 1..2
-    ]++
+    ];%++
     
-    [  show(boxMovedAtTime[t])|
-        t in STEPS
-    ];
+    %[  show(boxMovedAtTime[t])|
+    %    t in STEPS
+    %];
     
     
