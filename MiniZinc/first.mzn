@@ -15,23 +15,28 @@ set of int: MOVES = {0,1,2,3}; % 0:down  1:up  2: left  3:right
 n = 5;
 m = 5;
 k = 3;
-maxTime = 2;
+maxTime = 20;
 maxDim = 2;
 initialCoords = array2d(1..k,1..3,
                         [|3,3,2  %  first is x (column), second is y (row), third is dimension
                          |2,3,1
                          |5,2,1|]);     
-movesDoneAtTime = [0];
-boxSelectedAtTime = [1];
-%boxMovedAtTime = [0];
+                         
+finalCoords = array2d(1..k,1..2,
+                      [|1,5
+                       |4,5
+                       |3,5|]);      
+                         
+                         
+%movesDoneAtTime = [0];
+%boxSelectedAtTime = [1];
                         
 array [CARTONS,1..3] of par int: initialCoords;   % initialCoords[i][1] and coord[i][2] are the initial coordinates of carton i, initialCoords[i][3] is the length of the i-th box.
 array [CARTONS,1..2,1..maxTime] of var int: vertexCoords;  %save vertex coordinates at each step (to generate successive coordinates)
 
 array[STEPS] of var MOVES: movesDoneAtTime; %array containing the moves done at time i... this is calculated by solver
 array[STEPS] of var CARTONS: boxSelectedAtTime; %array containing the box selected at time i... this is calculated by solver
-%array[STEPS] of var 0..k: boxMovedAtTime; %array containing the box moved at time i... this is calculated by solver
-%array [CARTONS,1..2] of par int: finalCoords;   % finalCoords[i][1] and coord[i][2] are the final coordinates of carton i.
+array [CARTONS,1..2] of par int: finalCoords;   % finalCoords[i][1] and coord[i][2] are the final coordinates of carton i.
 array [ROWS,COLUMNS,1..maxTime] of var 0..3: room;  % room[i][j] = 0 if the cell is full, id means a box of id=id is on that cell.
 
 predicate setInitialMatrix()=
@@ -185,9 +190,16 @@ predicate printMatrix() =
   )  
 ;
 
+predicate finalPosition() =
+  forall(box in CARTONS)(
+  (vertexCoords[box,1,maxTime] = finalCoords[box,1]) /\
+  (vertexCoords[box,2,maxTime] = finalCoords[box,2]) 
+  )
+ ;
+
 constraint
   
-  setInitialMatrix() /\ inertia() /\ move() /\ printMatrix()
+  setInitialMatrix() /\ inertia() /\ move() /\ printMatrix() /\ finalPosition()
   
 ;
 
