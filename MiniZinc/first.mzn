@@ -10,12 +10,12 @@ set of int: CARTONS = 1..k;
 set of int: ROWS = 1..n;
 set of int: COLUMNS = 1..m;
 set of int: SIZE = 1..maxDim;
-set of int: MOVES = {0,1,2,3}; % 0:down  1:up  2: left  3:right
+set of int: MOVES = {0,1,2,3,4}; % 0:down  1:up  2: left  3:right 4:none
 
-n = 5;
-m = 5;
+n = 6;
+m = 6;
 k = 3;
-maxTime = 20;
+maxTime = 15;
 maxDim = 2;
 initialCoords = array2d(1..k,1..3,
                         [|3,3,2  %  first is x (column), second is y (row), third is dimension
@@ -23,13 +23,11 @@ initialCoords = array2d(1..k,1..3,
                          |5,2,1|]);     
                          
 finalCoords = array2d(1..k,1..2,
-                      [|1,5
-                       |4,5
-                       |3,5|]);      
+                      [|1,6
+                       |3,6
+                       |4,6|]);      
                          
                          
-%movesDoneAtTime = [0];
-%boxSelectedAtTime = [1];
                         
 array [CARTONS,1..3] of par int: initialCoords;   % initialCoords[i][1] and coord[i][2] are the initial coordinates of carton i, initialCoords[i][3] is the length of the i-th box.
 array [CARTONS,1..2,1..maxTime] of var int: vertexCoords;  %save vertex coordinates at each step (to generate successive coordinates)
@@ -131,10 +129,11 @@ predicate inertia() =
       )
           
      /\
-     %if the box selected is not pushable toward the direction selected, then inertia
-     ((not pushable(boxSelectedAtTime[t],t,movesDoneAtTime[t])) -> 
-       (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] /\  %x untouched
-        vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t]))
+     %if the box selected is not pushable toward the direction selected, then false
+     (not exists(carton in CARTONS)(
+      not pushable(boxSelectedAtTime[t],t,movesDoneAtTime[t]) /\ boxSelectedAtTime[t] = carton)
+     )
+     
          
   ))
 ;
@@ -163,6 +162,12 @@ predicate move() =
     
     (movesDoneAtTime[t] = 3 /\ pushable(boxSelectedAtTime[t],t,3) ->  %right
     (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] + 1 /\  %x 
+     vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t])) %y 
+     
+    /\
+    
+    (movesDoneAtTime[t] = 4 ->  %none movement
+    (vertexCoords[boxSelectedAtTime[t],1,t+1] = vertexCoords[boxSelectedAtTime[t],1,t] /\  %x 
      vertexCoords[boxSelectedAtTime[t],2,t+1] = vertexCoords[boxSelectedAtTime[t],2,t])) %y 
     
   ))
@@ -196,17 +201,20 @@ predicate finalPosition() =
   (vertexCoords[box,2,maxTime] = finalCoords[box,2]) 
   )
  ;
-
+  
 constraint
   
   setInitialMatrix() /\ inertia() /\ move() /\ printMatrix() /\ finalPosition()
   
 ;
 
+%Count number of null moves, then i want to maximize it  
+var int: nullMoves = count(move in movesDoneAtTime) (move == 4);
 
-
-
-solve satisfy;
+solve	:: int_search(movesDoneAtTime,input_order,indomain_min)
+   :: int_search(boxSelectedAtTime,first_fail,indomain_random)
+   :: restart_linear(10)
+   maximize nullMoves;
 
 output [ "matrice : \n"] ++
     [  %output matrice corretta
@@ -221,20 +229,34 @@ output [ "matrice : \n"] ++
         
         t in 1..maxTime,
         i in ROWS, j in COLUMNS
-    ] ++ [ "coordinate all'istante : \n"] ++ 
+    ]% ++ [ "coordinate all'istante : \n"] ++ 
     
-    [  show(vertexCoords[i,j,t]) ++ 
-        if j == 2 /\ i == k then "\n\n"
-        else
-          if j==2 then "\n"
-          else " "
-          endif
-        endif |
-        t in 1..maxTime, i in CARTONS, j in 1..2
-    ];%++
+    %[  show(vertexCoords[i,j,t]) ++ 
+    %    if j == 2 /\ i == k then "\n\n"
+    %    else
+    %      if j==2 then "\n"
+    %      else " "
+    %      endif
+    %    endif |
+    %    t in 1..maxTime, i in CARTONS, j in 1..2
+    %];%++
     
-    %[  show(boxMovedAtTime[t])|
-    %    t in STEPS
-    %];
+    %print only useful moves
+    ++
+    ["Moves :"]
+    
+    ++[ " " ++ show(movesDoneAtTime[t]) ++" "|
+        t in STEPS where fix(movesDoneAtTime[t])!=4
+    ]
+    
+    ++
+    
+    ["\nBoxes :"]
+    
+    ++[ " " ++ show(boxSelectedAtTime[t]) ++" "|
+        t in STEPS where fix(movesDoneAtTime[t])!=4
+    ]
+    
+    ;
     
     
