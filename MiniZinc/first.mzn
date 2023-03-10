@@ -257,6 +257,10 @@ output [ "matrice : \n"] ++
         t in STEPS where fix(movesDoneAtTime[t])!=4
     ]
     
+    ++
+    
+    ["\nTotal count : " ++ show(maxTime-nullMoves-1)]
+     
     ;
     
     
