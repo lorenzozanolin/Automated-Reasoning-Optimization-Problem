@@ -1,6 +1,9 @@
 import random
+import subprocess
 import numpy as numpy
 import re
+
+#ASP = f'clingo --time-limit 300 {ISTANZA_ASP}'
 
 def printField(matrix):
     for i in range(len(matrix)):
@@ -36,7 +39,7 @@ def generateBoxes(values,field,number):    #per generare il numero di box
         size = random.randrange(1,values[3])
         
         if(field[row][column] == 0 and abs(row-values[0])>1 and abs(column-values[1])>1 and isFree(field,row,column,size)): #se non sta sui bordi e in x,y è libero e se l'area è libera
-            print(column,row)
+            #print(column,row)
             occupyMatrix(field,column,row,size,i)    #aggiorno la matrice 
             #id, size, column, row
             mznCoordinates.append((i,size,column+1,row+size))
@@ -78,18 +81,65 @@ def easyValues(values): #per le istante easy, le scatole hanno dimensione massim
     
     matrix = numpy.zeros((values[0], values[1]), dtype=int)  #matrice che codifica la stanza
     mznICoordinates,aspICoordinates = generateBoxes(values,matrix,numberOfBoxes) #genero i box e le loro coordinate iniziali
-    print("VALORI INIZIALI : \n")
-    print("mzn: "+str(mznICoordinates)+"\n")
-    print("asp: "+str(aspICoordinates)+"\n")
-    printField(matrix)
+    #print("VALORI INIZIALI : \n")
+    #print("mzn: "+str(mznICoordinates)+"\n")
+    #print("asp: "+str(aspICoordinates)+"\n")
+    #printField(matrix)
     
     mznFCoordinates,aspFCoordinates = generateGoals(matrix,mznICoordinates,values) #genero le coordinate finali per ogni box inserito 
-    print("VALORI FINALI : \n")
-    print("mzn: "+str(mznFCoordinates)+"\n")
-    print("asp: "+str(aspFCoordinates)+"\n")
+    #print("VALORI FINALI : \n")
+    #print("mzn: "+str(mznFCoordinates)+"\n")
+    #print("asp: "+str(aspFCoordinates)+"\n")
     printField(matrix)
-    #return initialCoordinates,finalCoordinates
+    return mznICoordinates,aspICoordinates,mznFCoordinates,aspFCoordinates
 
+def createASPInstance(f,values,initialCoordinates,finalCoordinates):  
+    constantList = ["n","m","maxTime","maxDim","boxNumber"] #boxNumber è il numero di scatole, maxDim è la dimensione della scatola piu grande. Ogni scatola ha una dimensione variabile tra 1..maxDim
+    
+    for i in range(0,len(constantList)):    #constants
+        f.write("#const "+ constantList[i] +"="+ str(values[i]) +".\n")
+    
+    for i in range(0,len(initialCoordinates)):     #coordinates
+        f.write("boxCoord"+ str(initialCoordinates[i]) +".\n")
+    
+    for i in range(0,len(finalCoordinates)):     #depositis
+        f.write("deposit"+ str(finalCoordinates[i]) +".\n")
+
+def createMINIZINCInstance(f,values,initialCoordinates,finalCoordinates):
+    constantList = ["n","m","maxTime","maxDim","k"] #k è il numero di scatole, maxDim è la dimensione della scatola piu grande. Ogni scatola ha una dimensione variabile tra 1..maxDim
+    
+    for i in range(0,len(constantList)):    #constants
+        f.write(constantList[i] +"="+ str(values[i]) +";\n")
+    
+    f.write("initialCoords = array2d(1..k,1..3,\n[")
+    for i in range(0,len(initialCoordinates)):     #initial coordinates
+        f.write("|"+ str(initialCoordinates[i][2]) +","+ str(initialCoordinates[i][3]) +","+ str(initialCoordinates[i][1])+"\n")   
+    f.write("|]);")
+    
+    f.write("finalCoords = array2d(1..k,1..2,\n[")
+    finalCoordinates = sorted(finalCoordinates, key=lambda x: x[0])
+    for i in range(0,len(finalCoordinates)):     #initial coordinates
+        f.write("|"+ str(finalCoordinates[i][1]) +","+ str(finalCoordinates[i][2]) +"\n")   
+    f.write("|]);")
+
+def writeInstance(epochs):
+    values = [0,0,0,0,0]
+    for i in range(epochs):
+        initialM,initialA,finalM,finalA = easyValues(values)
+        f = open("./Answer Set Programming/Istanze/eIstance"+str(i+1)+".lp", "w")
+        createASPInstance(f,values,initialA,finalA)
+        f.close()
+        f = open("./Constraint Programming/Istanze/eIstance"+str(i+1)+".dzn", "w") 
+        createMINIZINCInstance(f,values,initialM,finalM)
+        f.close()
+        
+def getTimes(command) :
+    process = subprocess.run(['gtime'] + command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    gtimeResults = process.stderr.split('\n')[-3].split()
+    time = list(map(int, re.split('\:|\.', gtimeResults[2][:-7])))
+    milliseconds = (time[0] * 60 * 1000) + (time[1] * 1000) + (time[2] * 10)
+    maxMemory = int(gtimeResults[-1][:-13])
+    return milliseconds, maxMemory
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-easyValues([0,0,0,0,0])
+writeInstance(1)
