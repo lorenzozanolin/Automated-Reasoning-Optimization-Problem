@@ -71,13 +71,28 @@ def searchGoal(matrix,size,id,mznFinalCoords,aspFinalCoords,values):
         aspFinalCoords.append((id,j+1,values[0]-i))
         break
 
-def easyValues(values): #per le istante easy, le scatole hanno dimensione massima 3
-    #values = [m,n,maxTime,maxDim,boxNumber]    
-    values[0] = random.randrange(5,7)  #n
-    values[1] = random.randrange(5,7)  #m
-    values[3] = 3   #dimensione massima delle scatole, nelle istanze semplici massimo 3
-    values[2] = 25  #massimo 35 spostamenti
-    numberOfBoxes = 4   #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+def generateValues(values,difficulty): #per le istante easy, le scatole hanno dimensione massima 3
+    #values = [m,n,maxTime,maxDim,boxNumber]   
+    
+    if(difficulty == 'e'):    
+        values[0] = random.randrange(5,7)  #n
+        values[1] = random.randrange(5,7)  #m
+        values[3] = 3   #dimensione massima delle scatole, nelle istanze semplici massimo 3
+        values[2] = 25  #massimo 35 spostamenti
+        numberOfBoxes = 4   #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+    if(difficulty == 'm'):
+        values[0] = random.randrange(7,10)  #n
+        values[1] = random.randrange(7,10)  #m
+        values[3] = 4   #dimensione massima delle scatole, nelle istanze semplici massimo 3
+        values[2] = 35  #massimo 35 spostamenti
+        numberOfBoxes = 5  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+    if(difficulty == 'h'):
+        values[0] = random.randrange(11,14)  #n
+        values[1] = random.randrange(11,14)  #m
+        values[3] = 5   #dimensione massima delle scatole, nelle istanze semplici massimo 3
+        values[2] = 45  #massimo 35 spostamenti
+        numberOfBoxes = 6  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+    
     
     matrix = numpy.zeros((values[0], values[1]), dtype=int)  #matrice che codifica la stanza
     mznICoordinates,aspICoordinates = generateBoxes(values,matrix,numberOfBoxes) #genero i box e le loro coordinate iniziali
@@ -122,14 +137,14 @@ def createMINIZINCInstance(f,values,initialCoordinates,finalCoordinates):
         f.write("|"+ str(finalCoordinates[i][1]) +","+ str(finalCoordinates[i][2]) +"\n")   
     f.write("|]);")
 
-def writeInstance(epochs):
+def writeInstance(epochs,difficulty):
     values = [0,0,0,0,0]
     for i in range(epochs):
-        initialM,initialA,finalM,finalA = easyValues(values)
-        f = open("./Answer Set Programming/Istanze/eIstance"+str(i+1)+".lp", "w")
+        initialM,initialA,finalM,finalA = generateValues(values,difficulty)
+        f = open("./Answer Set Programming/Istanze/"+difficulty+"Istance"+str(i+1)+".lp", "w")
         createASPInstance(f,values,initialA,finalA)
         f.close()
-        f = open("./Constraint Programming/Istanze/eIstance"+str(i+1)+".dzn", "w") 
+        f = open("./Constraint Programming/Istanze/"+difficulty+"Istance"+str(i+1)+".dzn", "w") 
         createMINIZINCInstance(f,values,initialM,finalM)
         f.close()
         
@@ -142,4 +157,7 @@ def getTimes(command) :
     return milliseconds, maxMemory
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-writeInstance(1)
+#writeInstance(epochs,difficulty)   
+writeInstance(10,"e")
+writeInstance(10,"m")
+writeInstance(10,"h")
