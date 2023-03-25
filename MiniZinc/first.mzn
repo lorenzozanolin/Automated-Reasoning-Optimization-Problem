@@ -211,7 +211,7 @@ constraint
 %Count number of null moves, then i want to maximize it  
 var int: nullMoves = count(move in movesDoneAtTime) (move == 4);
 
-solve	:: int_search(movesDoneAtTime,input_order,indomain_min)
+solve	:: int_search(movesDoneAtTime,first_fail,indomain_min)
    :: int_search(boxSelectedAtTime,first_fail,indomain_random)
    :: restart_linear(10)
    maximize nullMoves;
