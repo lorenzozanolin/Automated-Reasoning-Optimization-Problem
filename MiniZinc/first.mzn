@@ -35,7 +35,7 @@ array [CARTONS,1..2,1..maxTime] of var int: vertexCoords;  %save vertex coordina
 array[STEPS] of var MOVES: movesDoneAtTime; %array containing the moves done at time i... this is calculated by solver
 array[STEPS] of var CARTONS: boxSelectedAtTime; %array containing the box selected at time i... this is calculated by solver
 array [CARTONS,1..2] of par int: finalCoords;   % finalCoords[i][1] and coord[i][2] are the final coordinates of carton i.
-array [ROWS,COLUMNS,1..maxTime] of var 0..3: room;  % room[i][j] = 0 if the cell is full, id means a box of id=id is on that cell.
+array [ROWS,COLUMNS,1..maxTime] of var 0..3: room;  % room[i][j] = 0 if the cell is empty, id means a box of id=id is on that cell.
 
 predicate setInitialMatrix()=
 %load the initial coordinates, then we need to generate all the occupied positions
