@@ -34,7 +34,7 @@ def generateBoxes(values,field,number):    #per generare il numero di box
     mznCoordinates = []
     for i in range(1,number+1):    #al massimo number boxes
         #alto a sx
-        row = random.randrange(values[3]-1,values[0]-2) #da 3 a n-2 perche cosi non tocca i bordi (NB la matrice va da 0 a m-1)
+        row = random.randrange(1,values[0]-2) #da 3 a n-2 perche cosi non tocca i bordi (NB la matrice va da 0 a m-1)
         column = random.randrange(1,values[1]-2)
         size = random.randrange(1,values[3])
         
@@ -61,37 +61,43 @@ def generateGoals(matrix,initialCoordinates,values):
 
 def searchGoal(matrix,size,id,mznFinalCoords,aspFinalCoords,values):
     #data la matrice e la dimensione del pacco, parti dal fondo a sx e cerca uno spazio libero
+    #print(values[0],values[1])
+    print(matrix.shape[0],matrix.shape[1])
     j = 0
     for i in range(matrix.shape[0]-1, -1, -1):
-        while matrix[i][j]!=0:
+        #print(i)
+        #print(matrix[i][j])
+        while matrix[i][j]!=0 and j<matrix.shape[1]:
             j+=1
-        occupyMatrix(matrix,j,i-size+1,size,id)
-        #print("x:"+ str(j), "y:"+str(i))
-        mznFinalCoords.append((id,j+1,(i+1))) #deve essere id,x,y
-        aspFinalCoords.append((id,j+1,values[0]-i))
-        break
+        if j<matrix.shape[1]:
+            #print("occupata")
+            occupyMatrix(matrix,j,i-size+1,size,id)
+            #print("x:"+ str(j), "y:"+str(i))
+            mznFinalCoords.append((id,j+1,(i+1))) #deve essere id,x,y
+            aspFinalCoords.append((id,j+1,values[0]-i))
+            break
 
 def generateValues(values,difficulty): #per le istante easy, le scatole hanno dimensione massima 3
     #values = [m,n,maxTime,maxDim,boxNumber]   
     
     if(difficulty == 'e'):    
-        values[0] = random.randrange(5,7)  #n
-        values[1] = random.randrange(5,7)  #m
-        values[3] = 3   #dimensione massima delle scatole, nelle istanze semplici massimo 3
+        values[0] = 4 #n
+        values[1] = 4  #m
+        values[3] = 2   #dimensione massima delle scatole, nelle istanze semplici massimo 3
         values[2] = 25  #massimo 35 spostamenti
-        numberOfBoxes = 4   #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+        numberOfBoxes = 2   #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
     if(difficulty == 'm'):
-        values[0] = random.randrange(7,10)  #n
-        values[1] = random.randrange(7,10)  #m
-        values[3] = 4   #dimensione massima delle scatole, nelle istanze semplici massimo 3
+        values[0] = random.randrange(4,7)  #n
+        values[1] = random.randrange(4,7)  #m
+        values[3] = 3   #dimensione massima delle scatole, nelle istanze semplici massimo 3
         values[2] = 35  #massimo 35 spostamenti
-        numberOfBoxes = 5  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+        numberOfBoxes = 3  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
     if(difficulty == 'h'):
-        values[0] = random.randrange(11,14)  #n
-        values[1] = random.randrange(11,14)  #m
-        values[3] = 5   #dimensione massima delle scatole, nelle istanze semplici massimo 3
+        values[0] = random.randrange(7,9)  #n
+        values[1] = random.randrange(7,9)  #m
+        values[3] = 4   #dimensione massima delle scatole, nelle istanze semplici massimo 3
         values[2] = 45  #massimo 35 spostamenti
-        numberOfBoxes = 6  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+        numberOfBoxes = 5  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
     
     
     matrix = numpy.zeros((values[0], values[1]), dtype=int)  #matrice che codifica la stanza
@@ -147,6 +153,7 @@ def writeInstance(epochs,difficulty):
         f = open("./Constraint Programming/Istanze/"+difficulty+"Istance"+str(i+1)+".dzn", "w") 
         createMINIZINCInstance(f,values,initialM,finalM)
         f.close()
+        values = [0,0,0,0,0]
         
 def getTimes(command) :
     process = subprocess.run(['gtime'] + command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -158,6 +165,6 @@ def getTimes(command) :
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #writeInstance(epochs,difficulty)   
-writeInstance(10,"e")
-writeInstance(10,"m")
-writeInstance(10,"h")
+writeInstance(5,"e")
+writeInstance(20,"m")
+writeInstance(5,"h")
