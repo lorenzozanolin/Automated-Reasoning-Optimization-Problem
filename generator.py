@@ -34,8 +34,8 @@ def generateBoxes(values,field,number):    #per generare il numero di box
     mznCoordinates = []
     for i in range(1,number+1):    #al massimo number boxes
         #alto a sx
-        row = random.randrange(1,values[0]-2) #da 3 a n-2 perche cosi non tocca i bordi (NB la matrice va da 0 a m-1)
-        column = random.randrange(1,values[1]-2)
+        row = random.randrange(1,values[0]-1) #da 3 a n-2 perche cosi non tocca i bordi (NB la matrice va da 0 a m-1)
+        column = random.randrange(1,values[1]-1)
         size = random.randrange(1,values[3])
         
         if(field[row][column] == 0 and abs(row-values[0])>1 and abs(column-values[1])>1 and isFree(field,row,column,size)): #se non sta sui bordi e in x,y è libero e se l'area è libera
@@ -62,12 +62,12 @@ def generateGoals(matrix,initialCoordinates,values):
 def searchGoal(matrix,size,id,mznFinalCoords,aspFinalCoords,values):
     #data la matrice e la dimensione del pacco, parti dal fondo a sx e cerca uno spazio libero
     #print(values[0],values[1])
-    print(matrix.shape[0],matrix.shape[1])
+    #print(matrix.shape[0],matrix.shape[1])
     j = 0
     for i in range(matrix.shape[0]-1, -1, -1):
         #print(i)
         #print(matrix[i][j])
-        while matrix[i][j]!=0 and j<matrix.shape[1]:
+        while j<matrix.shape[1] and matrix[i][j]!=0:
             j+=1
         if j<matrix.shape[1]:
             #print("occupata")
@@ -81,23 +81,23 @@ def generateValues(values,difficulty): #per le istante easy, le scatole hanno di
     #values = [m,n,maxTime,maxDim,boxNumber]   
     
     if(difficulty == 'e'):    
-        values[0] = 4 #n
-        values[1] = 4  #m
+        values[0] = random.randrange(3,5) #n    (tra 3 e 4)
+        values[1] = random.randrange(3,5)  #m
         values[3] = 2   #dimensione massima delle scatole, nelle istanze semplici massimo 3
         values[2] = 25  #massimo 35 spostamenti
         numberOfBoxes = 2   #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
     if(difficulty == 'm'):
-        values[0] = random.randrange(4,7)  #n
-        values[1] = random.randrange(4,7)  #m
+        values[0] = random.randrange(4,6)  #n   (tra 4 e 5)
+        values[1] = random.randrange(4,6)  #m
         values[3] = 3   #dimensione massima delle scatole, nelle istanze semplici massimo 3
         values[2] = 35  #massimo 35 spostamenti
-        numberOfBoxes = 3  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+        numberOfBoxes = 2  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
     if(difficulty == 'h'):
         values[0] = random.randrange(7,9)  #n
         values[1] = random.randrange(7,9)  #m
         values[3] = 4   #dimensione massima delle scatole, nelle istanze semplici massimo 3
-        values[2] = 45  #massimo 35 spostamenti
-        numberOfBoxes = 5  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
+        values[2] = 55  #massimo 35 spostamenti
+        numberOfBoxes = 4  #per le istnaze MASSIMO 4 box, poi quelle effettive sono salvate in values[4]
     
     
     matrix = numpy.zeros((values[0], values[1]), dtype=int)  #matrice che codifica la stanza
@@ -111,7 +111,7 @@ def generateValues(values,difficulty): #per le istante easy, le scatole hanno di
     #print("VALORI FINALI : \n")
     #print("mzn: "+str(mznFCoordinates)+"\n")
     #print("asp: "+str(aspFCoordinates)+"\n")
-    printField(matrix)
+    #printField(matrix)
     return mznICoordinates,aspICoordinates,mznFCoordinates,aspFCoordinates
 
 def createASPInstance(f,values,initialCoordinates,finalCoordinates):  
@@ -168,3 +168,5 @@ def getTimes(command) :
 writeInstance(5,"e")
 writeInstance(20,"m")
 writeInstance(5,"h")
+
+print("Done")
