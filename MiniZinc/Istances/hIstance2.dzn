@@ -1,0 +1,14 @@
+n=8;
+m=8;
+maxTime=55;
+maxDim=4;
+k=3;
+initialCoords = array2d(1..k,1..3,
+[|3,3,1
+|5,2,1
+|4,7,3
+|]);finalCoords = array2d(1..k,1..2,
+[|4,8
+|5,8
+|1,8
+|]);

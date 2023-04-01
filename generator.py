@@ -147,10 +147,10 @@ def writeInstance(epochs,difficulty):
     values = [0,0,0,0,0]
     for i in range(epochs):
         initialM,initialA,finalM,finalA = generateValues(values,difficulty)
-        f = open("./Answer Set Programming/Istanze/"+difficulty+"Istance"+str(i+1)+".lp", "w")
+        f = open("./Answer Set Programming/Istances/"+difficulty+"Istance"+str(i+1)+".lp", "w")
         createASPInstance(f,values,initialA,finalA)
         f.close()
-        f = open("./Constraint Programming/Istanze/"+difficulty+"Istance"+str(i+1)+".dzn", "w") 
+        f = open("./Constraint Programming/Istances/"+difficulty+"Istance"+str(i+1)+".dzn", "w") 
         createMINIZINCInstance(f,values,initialM,finalM)
         f.close()
         values = [0,0,0,0,0]
