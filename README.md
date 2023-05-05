@@ -20,6 +20,7 @@ The structure of the src folder is the following:
 
 -   `TeX`: contains the latex source of the report.
 
+-   `Instances generator`: contains the python script used to generate istances.
 
 
 
