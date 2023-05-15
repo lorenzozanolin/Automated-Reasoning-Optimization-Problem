@@ -59,7 +59,7 @@ Within MiniZinc IDE you simply need to import both model and the istance you wan
 
 ### Benchmarks
 
-The report contains a detailed analysis of the performances evaluated by the two models over 30 instances. In the above figures you can see them.
+The report contains a detailed analysis of the performances evaluated by the two models over 30 instances. In the following figures you can see them.
 
 | <img src="TeX/images/Figure_1.png"> |
 |:--:|
